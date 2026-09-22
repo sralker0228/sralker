@@ -1,5 +1,18 @@
-if (error || !lessons || lessons.length === 0) {
-    bot.sendMessage(chatId, 'На сегодня пар нет.');
+const dbDay = getDbDayOfWeek();
+  if (dbDay === 0) {
+    sendReply(msg, 'Сегодня воскресенье, пар нет 🎉');
+    return;
+  }
+
+  const { data: lessons, error } = await supabase
+    .from('schedule')
+    .select('*')
+    .eq('group_id', groupId)
+    .eq('day_of_week', dbDay)
+    .order('lesson_number');
+
+  if (error || !lessons || lessons.length === 0) {
+    sendReply(msg, 'На сегодня пар нет.');
     return;
   }
 
@@ -23,17 +36,17 @@ if (error || !lessons || lessons.length === 0) {
   }
 
   if (current) {
-    bot.sendMessage(
-      chatId,
+    sendReply(
+      msg,
       `Сейчас идёт ${current.lesson_number} пара: ${current.subject_name} (${formatTime(current.time_start)} - ${formatTime(current.time_end)})`
     );
   } else if (next) {
-    bot.sendMessage(
-      chatId,
+    sendReply(
+      msg,
       `Сейчас перемена. Следующая пара в ${formatTime(next.time_start)}: ${next.subject_name}`
     );
   } else {
-    bot.sendMessage(chatId, 'На сегодня все пары закончились.');
+    sendReply(msg, 'На сегодня все пары закончились.');
   }
 });
 
